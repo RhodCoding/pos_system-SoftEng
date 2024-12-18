@@ -1,6 +1,7 @@
 <?php
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+session_start(); 
+require_once '../includes/config.php';
+require_once '../includes/functions.php';
 
 // Clear all session variables
 $_SESSION = array();
@@ -9,4 +10,5 @@ $_SESSION = array();
 session_destroy();
 
 // Redirect to login page
-redirect('login.php');
+redirect('../login.php');
+?> 
