@@ -8,6 +8,8 @@ if (!isLoggedIn()) {
     exit;
 }
 
+include_once '../includes/employee_header.php'; // Include the employee header
+
 // Initialize response array
 $response = ['success' => false, 'message' => ''];
 

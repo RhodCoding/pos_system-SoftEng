@@ -7,6 +7,8 @@ if (!isLoggedIn()) {
     die('Unauthorized access');
 }
 
+include_once 'C:/xampp/htdocs/pos_system/pos/includes/header_employee.php';
+
 // Get order ID
 $order_id = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
 

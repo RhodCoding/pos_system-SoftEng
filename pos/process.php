@@ -21,6 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ]));
 }
 
+// Log the incoming POST data for debugging
+error_log(print_r($_POST, true));
+
 // Get POST data
 $cart = isset($_POST['cart']) ? json_decode($_POST['cart'], true) : [];
 $payment_method = clean($_POST['payment_method']);
@@ -30,10 +33,15 @@ $tax_amount = floatval($_POST['tax_amount']);
 
 // Validate data
 if (empty($cart)) {
-    die(json_encode([
-        'success' => false,
-        'message' => 'Cart is empty'
-    ]));
+    die(json_encode(['success' => false, 'message' => 'Cart is empty']));
+}
+
+if (empty($payment_method)) {
+    die(json_encode(['success' => false, 'message' => 'Payment method is required']));
+}
+
+if ($received_amount <= 0) {
+    die(json_encode(['success' => false, 'message' => 'Received amount must be greater than zero']));
 }
 
 // Start transaction
@@ -52,7 +60,10 @@ try {
         $payment_method,
         $received_amount
     );
-    mysqli_stmt_execute($stmt);
+
+    if (!mysqli_stmt_execute($stmt)) {
+        throw new Exception('Database error: ' . mysqli_error($conn));
+    }
     $order_id = mysqli_insert_id($conn);
 
     // Insert order items and update stock
@@ -114,6 +125,7 @@ try {
     // Rollback transaction on error
     mysqli_rollback($conn);
     
+    error_log('Payment processing error: ' . $e->getMessage());
     echo json_encode([
         'success' => false,
         'message' => $e->getMessage()

@@ -8,7 +8,7 @@ if (!isLoggedIn()) {
 }
 
 $page_title = 'POS';
-include_once '../includes/header.php';
+include_once 'C:/xampp/htdocs/pos_system/pos/includes/header_employee.php'; // Use absolute path for debugging
 
 // Get all categories
 $query = "SELECT * FROM categories WHERE active = 1 ORDER BY name";
@@ -23,6 +23,27 @@ $query = "SELECT p.*, c.name as category_name
 $products = mysqli_query($conn, $query);
 ?>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $page_title; ?></title>
+    
+    <style>
+        /* Existing styles... */
+
+        .product-item img {
+            width: 100%; /* Make the image take the full width of the card */
+            height: 200px; /* Set a fixed height */
+            object-fit: cover; /* Maintain aspect ratio and cover the area */
+            border-radius: 10px;
+        }
+
+        /* Other styles... */
+    </style>
+</head>
+<body>
 <div class="container-fluid mt-3">
     <div class="row">
         <!-- Products Section (Right) -->
@@ -46,10 +67,15 @@ $products = mysqli_query($conn, $query);
                     <div class="col-md-3 mb-3 product-item" 
                          data-category="<?php echo $product['category_id']; ?>">
                         <div class="card h-100">
+                            <?php 
+                            // Construct the image path
+                            $imagePath = !empty($product['image_path']) ? 'http://localhost/pos_system' . htmlspecialchars($product['image_path']) : '/uploads/products/default.jpg'; 
+                            ?>
+                            <img src="<?php echo $imagePath; ?>" class="card-img-top" alt="<?php echo htmlspecialchars($product['name']); ?>">
                             <div class="card-body text-center">
-                                <h6 class="card-title mb-1"><?php echo $product['name']; ?></h6>
+                                <h6 class="card-title mb-1"><?php echo htmlspecialchars($product['name']); ?></h6>
                                 <p class="card-text text-muted small mb-2">
-                                    <?php echo $product['category_name']; ?>
+                                    <?php echo htmlspecialchars($product['category_name']); ?>
                                 </p>
                                 <p class="card-text font-weight-bold mb-2">
                                     <?php echo formatCurrency($product['price']); ?>
@@ -59,7 +85,7 @@ $products = mysqli_query($conn, $query);
                                 </p>
                                 <button class="btn btn-primary btn-sm add-to-cart" 
                                         data-id="<?php echo $product['product_id']; ?>"
-                                        data-name="<?php echo $product['name']; ?>"
+                                        data-name="<?php echo htmlspecialchars($product['name']); ?>"
                                         data-price="<?php echo $product['price']; ?>"
                                         data-stock="<?php echo $product['stock']; ?>">
                                     <i class="fas fa-plus"></i> Add
@@ -170,6 +196,8 @@ $products = mysqli_query($conn, $query);
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
 // Cart management
@@ -328,19 +356,44 @@ $('#received-amount').on('input', function() {
 // Process payment
 $('#process-payment').click(function() {
     const formData = {
-        cart: cart,
+        cart: JSON.stringify(cart), // Ensure cart is stringified
         payment_method: $('#payment-method').val(),
         received_amount: parseFloat($('#received-amount').val()),
         total_amount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
         tax_amount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * taxRate
     };
     
+    // Log the form data for debugging
+    console.log('Form Data:', formData);
+
     // Send to process.php
     $.post('process.php', formData)
         .done(function(response) {
+            console.log('Response:', response); // Log the response for debugging
             if (response.success) {
                 // Open receipt in new window
                 window.open('receipt.php?order_id=' + response.order_id, '_blank');
+                
+                // Prepare product IDs for stock update
+                const productIds = cart.map(item => item.id);
+                
+                // Fetch updated stock levels
+                $.post('update_stock.php', { product_ids: productIds })
+                    .done(function(stockResponse) {
+                        if (stockResponse.success) {
+                            // Update the stock display in the product grid
+                            for (const productId in stockResponse.stocks) {
+                                const newStock = stockResponse.stocks[productId];
+                                $(`.product-item[data-id="${productId}"] .stock-display`).text(`Stock: ${newStock}`);
+                            }
+                        } else {
+                            console.error('Failed to update stock:', stockResponse.message);
+                        }
+                    })
+                    .fail(function() {
+                        console.error('Error fetching updated stock levels.');
+                    });
+
                 // Clear cart and close modal
                 cart = [];
                 updateCartDisplay();
@@ -356,6 +409,18 @@ $('#process-payment').click(function() {
 
 // Initialize cart display
 updateCartDisplay();
+
+// Event listener for add buttons
+$(document).on('click', '.add-to-cart', function() {
+    const product = {
+        id: $(this).data('id'),
+        name: $(this).data('name'),
+        price: $(this).data('price'),
+        stock: $(this).data('stock'),
+        quantity: 1 // Default quantity
+    };
+    addToCart(product);
+});
 </script>
 
 <?php include_once '../includes/footer.php'; ?>

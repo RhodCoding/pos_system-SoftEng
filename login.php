@@ -4,7 +4,7 @@ require_once 'includes/functions.php';
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    redirect('index.php');
+    redirect('pos/index.php');
 }
 
 // Handle login form submission
@@ -37,8 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['role'] = $user['role'];
             $_SESSION['full_name'] = $user['full_name'];
 
-            // Redirect to the admin dashboard
-            redirect('admin/dashboard.php');
+            // Redirect based on role
+            if ($user['role'] === 'admin') {
+                redirect('admin/dashboard.php');
+            } else {
+                redirect('pos/index.php');
+            }
         } else {
             // Handle login failure
             $errors[] = "Invalid username or password";

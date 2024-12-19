@@ -1,5 +1,5 @@
 <?php
-// includes/header.php
+// includes/header_employee.php
 ?>
 <!DOCTYPE html>
 <html>
@@ -18,31 +18,28 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mr-auto">
-                    <?php if (isAdmin()): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/dashboard.php">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/products">Products</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/reports">Reports</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/users">Users</a>
-                        </li>
-                    <?php else: ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/pos">POS</a>
-                        </li>
-                    <?php endif; ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pos">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pos/current_orders.php">Current Orders</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pos/products.php">Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pos/sales_history.php">Sales History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pos/settings.php">Settings</a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <span class="nav-link">Welcome, <?php echo $_SESSION['username']; ?></span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/logout.php">Logout</a>
+                        <a class="nav-link" href="/pos_system/logout.php">Logout</a>
                     </li>
                 </ul>
             </div>
